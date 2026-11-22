@@ -1,4 +1,4 @@
-name: yml
+name: Build APK
 
 on:
   push:
@@ -19,10 +19,23 @@ jobs:
         with:
           gradle-version: 8.9
 
+      - name: Buscar el proyecto
+        run: |
+          echo "Archivos en el repositorio:"
+          find . -maxdepth 3 -not -path './.git/*' | head -n 60
+          F=$(find . -name settings.gradle.kts -not -path './.git/*' | head -n 1)
+          if [ -z "$F" ]; then
+            echo "ERROR: no se subió settings.gradle.kts al repositorio"
+            exit 1
+          fi
+          echo "PROJECT_DIR=$(dirname "$F")" >> "$GITHUB_ENV"
+
       - name: Compilar APK
-        run: gradle assembleDebug --no-daemon
+        run: |
+          cd "$PROJECT_DIR"
+          gradle assembleDebug --no-daemon
 
       - uses: actions/upload-artifact@v4
         with:
           name: IslaDinamica-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: "**/app-debug.apk"
